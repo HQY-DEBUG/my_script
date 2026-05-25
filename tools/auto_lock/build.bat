@@ -6,7 +6,7 @@ pyinstaller ^
     --onefile ^
     --windowed ^
     --name auto_lock ^
-    --distpath ..\..\EXE ^
+    --distpath ..\..\EXE\auto_lock ^
     --workpath build ^
     --specpath build ^
     auto_lock.py
