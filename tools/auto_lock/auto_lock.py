@@ -200,6 +200,8 @@ class AutoLockApp:
 
         self._tray.setContextMenu(menu)
         self._tray.show()
+        # 延迟刷新确保 Windows 托盘区域完成初始化
+        QTimer.singleShot(500, lambda: self._tray.show())
 
     # ---- 定时检测 ----//
     def _on_tick(self):
@@ -247,15 +249,28 @@ class AutoLockApp:
 
 # ---- 入口 ----//
 def main():
-    app = QApplication(sys.argv)
-    app.setQuitOnLastWindowClosed(False)    # 关闭所有窗口后不退出
+    import traceback, os
+    log_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "auto_lock_error.log")
+    try:
+        # 单例互斥锁，防止重复启动
+        mutex = ctypes.windll.kernel32.CreateMutexW(None, False, "Global\\AutoLockSingleInstance")
+        if ctypes.windll.kernel32.GetLastError() == 183:    # ERROR_ALREADY_EXISTS
+            ctypes.windll.kernel32.CloseHandle(mutex)
+            return
 
-    if not QSystemTrayIcon.isSystemTrayAvailable():
-        QMessageBox.critical(None, "错误", "系统不支持托盘图标，无法运行。")
-        sys.exit(1)
+        app = QApplication(sys.argv)
+        app.setQuitOnLastWindowClosed(False)    # 关闭所有窗口后不退出
 
-    AutoLockApp(app)
-    sys.exit(app.exec_())
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            QMessageBox.critical(None, "错误", "系统不支持托盘图标，无法运行。")
+            sys.exit(1)
+
+        lock_app = AutoLockApp(app)
+        sys.exit(app.exec_())
+    except Exception:
+        with open(log_path, "w", encoding="utf-8") as f:
+            traceback.print_exc(file=f)
+        raise
 
 
 if __name__ == "__main__":
