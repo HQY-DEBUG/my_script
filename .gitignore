@@ -179,7 +179,7 @@ coverage*.info
 # Visual Studio code coverage results
 *.coverage
 *.coveragexml
-
+build/
 # NCrunch
 _NCrunch_*
 .NCrunch_*
