@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
     QSpinBox, QPushButton, QMessageBox
 )
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QFont
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QPen
 
 
 # ---- 默认超时时间（分钟）----//
@@ -56,7 +56,7 @@ def lock_workstation():
 # ---- 托盘图标生成 ----//
 def _make_tray_icon(color: str) -> QIcon:
     """
-    生成指定颜色的圆形托盘图标。
+    生成指定颜色的锁形托盘图标（纯几何绘制，无 emoji 依赖）。
 
     Args:
         color: Qt 颜色名称字符串，如 "#4CAF50"
@@ -69,13 +69,28 @@ def _make_tray_icon(color: str) -> QIcon:
     pixmap.fill(Qt.transparent)
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.Antialiasing)
+
+    # 背景圆
     painter.setBrush(QColor(color))
     painter.setPen(Qt.NoPen)
-    painter.drawEllipse(4, 4, size - 8, size - 8)
-    # 绘制锁图标简化符号
-    painter.setPen(QColor("white"))
-    painter.setFont(QFont("Arial", 28, QFont.Bold))
-    painter.drawText(pixmap.rect(), Qt.AlignCenter, "🔒")
+    painter.drawEllipse(2, 2, size - 4, size - 4)
+
+    # 锁体（白色圆角矩形）
+    painter.setBrush(QColor("white"))
+    painter.drawRoundedRect(18, 32, 28, 22, 4, 4)
+
+    # 锁梁（白色弧形，用粗笔描边）
+    pen = QPen(QColor("white"), 5)
+    pen.setCapStyle(Qt.RoundCap)
+    painter.setPen(pen)
+    painter.setBrush(Qt.NoBrush)
+    painter.drawArc(20, 16, 24, 26, 0 * 16, 180 * 16)
+
+    # 锁孔（背景色小圆）
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor(color))
+    painter.drawEllipse(28, 37, 8, 8)
+
     painter.end()
     return QIcon(pixmap)
 
